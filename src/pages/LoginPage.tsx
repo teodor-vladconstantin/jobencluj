@@ -2,10 +2,88 @@ import PageLayout from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
-import { Mail, Lock } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { loginSchema, LoginFormData } from '@/lib/validators';
+import { useToast } from '@/hooks/use-toast';
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const { signIn, user, profile } = useAuth();
+  const { toast } = useToast();
+  
+  const [formData, setFormData] = useState<LoginFormData>({
+    email: '',
+    password: '',
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({});
+  const [loading, setLoading] = useState(false);
+
+  // Redirect authenticated users
+  useEffect(() => {
+    if (user && profile) {
+      const redirectPath = profile.role === 'candidate' 
+        ? '/dashboard/candidate' 
+        : '/dashboard/employer';
+      navigate(redirectPath, { replace: true });
+    }
+  }, [user, profile, navigate]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error for this field
+    if (errors[name as keyof LoginFormData]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate
+    const result = loginSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: Partial<Record<keyof LoginFormData, string>> = {};
+      result.error.issues.forEach(issue => {
+        const field = issue.path[0] as keyof LoginFormData;
+        fieldErrors[field] = issue.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setLoading(true);
+    setErrors({});
+
+    const { error } = await signIn(formData.email, formData.password);
+
+    if (error) {
+      if (error.message.includes('Invalid login credentials')) {
+        toast({
+          variant: 'destructive',
+          title: 'Autentificare eșuată',
+          description: 'Email sau parolă incorectă. Te rugăm să încerci din nou.',
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Eroare',
+          description: error.message || 'A apărut o eroare. Te rugăm să încerci din nou.',
+        });
+      }
+      setLoading(false);
+    } else {
+      toast({
+        title: 'Autentificare reușită!',
+        description: 'Bine ai revenit!',
+      });
+      // Navigation handled by useEffect
+    }
+  };
+
   return (
     <PageLayout>
       <div className="container mx-auto px-4 py-20">
@@ -20,7 +98,7 @@ const LoginPage = () => {
           </div>
 
           <Card className="p-6 border border-border shadow-card">
-            <form className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium mb-2">
                   Email
@@ -29,11 +107,21 @@ const LoginPage = () => {
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     placeholder="nume@exemplu.ro"
                     className="pl-10"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={loading}
                   />
                 </div>
+                {errors.email && (
+                  <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.email}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -44,15 +132,29 @@ const LoginPage = () => {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     id="password"
+                    name="password"
                     type="password"
                     placeholder="••••••••"
                     className="pl-10"
+                    value={formData.password}
+                    onChange={handleChange}
+                    disabled={loading}
                   />
                 </div>
+                {errors.password && (
+                  <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.password}
+                  </p>
+                )}
               </div>
 
-              <Button className="w-full bg-gradient-primary hover:shadow-button transition-smooth">
-                Intră în cont
+              <Button 
+                type="submit"
+                className="w-full bg-gradient-primary hover:shadow-button transition-smooth"
+                disabled={loading}
+              >
+                {loading ? 'Se încarcă...' : 'Intră în cont'}
               </Button>
             </form>
 

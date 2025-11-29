@@ -2,12 +2,102 @@ import PageLayout from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
-import { Mail, Lock, User, Building } from 'lucide-react';
-import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, User, Building, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { registerSchema, RegisterFormData } from '@/lib/validators';
+import { useToast } from '@/hooks/use-toast';
 
 const RegisterPage = () => {
-  const [role, setRole] = useState<'candidate' | 'employer'>('candidate');
+  const navigate = useNavigate();
+  const { signUp, user, profile } = useAuth();
+  const { toast } = useToast();
+  
+  const [formData, setFormData] = useState<RegisterFormData>({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    fullName: '',
+    role: 'candidate',
+    companyName: '',
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof RegisterFormData, string>>>({});
+  const [loading, setLoading] = useState(false);
+
+  // Redirect authenticated users
+  useEffect(() => {
+    if (user && profile) {
+      const redirectPath = profile.role === 'candidate' 
+        ? '/dashboard/candidate' 
+        : '/dashboard/employer';
+      navigate(redirectPath, { replace: true });
+    }
+  }, [user, profile, navigate]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name as keyof RegisterFormData]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const handleRoleChange = (newRole: 'candidate' | 'employer') => {
+    setFormData(prev => ({ ...prev, role: newRole }));
+    if (errors.role) {
+      setErrors(prev => ({ ...prev, role: undefined }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const result = registerSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: Partial<Record<keyof RegisterFormData, string>> = {};
+      result.error.issues.forEach(issue => {
+        const field = issue.path[0] as keyof RegisterFormData;
+        fieldErrors[field] = issue.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setLoading(true);
+    setErrors({});
+
+    const { error } = await signUp(
+      formData.email,
+      formData.password,
+      formData.fullName,
+      formData.role,
+      formData.companyName
+    );
+
+    if (error) {
+      if (error.message.includes('already registered')) {
+        toast({
+          variant: 'destructive',
+          title: 'Email deja folosit',
+          description: 'Acest email este deja înregistrat. Încearcă să te loghezi.',
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Eroare',
+          description: error.message || 'A apărut o eroare. Te rugăm să încerci din nou.',
+        });
+      }
+      setLoading(false);
+    } else {
+      toast({
+        title: 'Cont creat cu succes!',
+        description: 'Bine ai venit! Profilul tău a fost creat.',
+      });
+      // Navigation handled by useEffect
+    }
+  };
 
   return (
     <PageLayout>
@@ -27,9 +117,10 @@ const RegisterPage = () => {
             <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-muted rounded-lg">
               <button
                 type="button"
-                onClick={() => setRole('candidate')}
+                onClick={() => handleRoleChange('candidate')}
+                disabled={loading}
                 className={`px-4 py-2 rounded-md font-medium text-sm transition-smooth ${
-                  role === 'candidate'
+                  formData.role === 'candidate'
                     ? 'bg-background shadow-sm text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
@@ -38,9 +129,10 @@ const RegisterPage = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setRole('employer')}
+                onClick={() => handleRoleChange('employer')}
+                disabled={loading}
                 className={`px-4 py-2 rounded-md font-medium text-sm transition-smooth ${
-                  role === 'employer'
+                  formData.role === 'employer'
                     ? 'bg-background shadow-sm text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
@@ -49,7 +141,7 @@ const RegisterPage = () => {
               </button>
             </div>
 
-            <form className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="fullName" className="block text-sm font-medium mb-2">
                   Nume complet
@@ -58,14 +150,24 @@ const RegisterPage = () => {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     id="fullName"
+                    name="fullName"
                     type="text"
                     placeholder="Ion Popescu"
                     className="pl-10"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    disabled={loading}
                   />
                 </div>
+                {errors.fullName && (
+                  <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.fullName}
+                  </p>
+                )}
               </div>
 
-              {role === 'employer' && (
+              {formData.role === 'employer' && (
                 <div>
                   <label htmlFor="companyName" className="block text-sm font-medium mb-2">
                     Nume companie
@@ -74,11 +176,21 @@ const RegisterPage = () => {
                     <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
                       id="companyName"
+                      name="companyName"
                       type="text"
                       placeholder="Tech Company SRL"
                       className="pl-10"
+                      value={formData.companyName}
+                      onChange={handleChange}
+                      disabled={loading}
                     />
                   </div>
+                  {errors.companyName && (
+                    <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.companyName}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -90,11 +202,21 @@ const RegisterPage = () => {
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     placeholder="nume@exemplu.ro"
                     className="pl-10"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={loading}
                   />
                 </div>
+                {errors.email && (
+                  <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.email}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -105,11 +227,21 @@ const RegisterPage = () => {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     id="password"
+                    name="password"
                     type="password"
                     placeholder="••••••••"
                     className="pl-10"
+                    value={formData.password}
+                    onChange={handleChange}
+                    disabled={loading}
                   />
                 </div>
+                {errors.password && (
+                  <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.password}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -120,15 +252,29 @@ const RegisterPage = () => {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     id="confirmPassword"
+                    name="confirmPassword"
                     type="password"
                     placeholder="••••••••"
                     className="pl-10"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    disabled={loading}
                   />
                 </div>
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.confirmPassword}
+                  </p>
+                )}
               </div>
 
-              <Button className="w-full bg-gradient-primary hover:shadow-button transition-smooth">
-                Creează cont
+              <Button 
+                type="submit"
+                className="w-full bg-gradient-primary hover:shadow-button transition-smooth"
+                disabled={loading}
+              >
+                {loading ? 'Se creează contul...' : 'Creează cont'}
               </Button>
             </form>
 
