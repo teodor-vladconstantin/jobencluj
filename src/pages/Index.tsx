@@ -1,9 +1,56 @@
+import { useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Zap, Clock, Sparkles } from 'lucide-react';
+import JobFilters, { JobFiltersState } from '@/components/jobs/JobFilters';
+import JobList from '@/components/jobs/JobList';
+import { useJobs } from '@/hooks/useJobs';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const Index = () => {
+  const [searchInput, setSearchInput] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<JobFiltersState>({
+    location: 'all',
+    jobTypes: [],
+    seniorities: [],
+    techStack: [],
+  });
+
+  const debouncedSearch = useDebounce(searchInput, 300);
+
+  const { jobs, totalPages, isLoading } = useJobs({
+    search: debouncedSearch,
+    location: filters.location,
+    jobTypes: filters.jobTypes,
+    seniorities: filters.seniorities,
+    techStack: filters.techStack,
+    page: currentPage,
+    pageSize: 20,
+  });
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(1);
+  };
+
+  const handleFiltersChange = (newFilters: JobFiltersState) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
+
+  const handleFiltersReset = () => {
+    setFilters({
+      location: 'all',
+      jobTypes: [],
+      seniorities: [],
+      techStack: [],
+    });
+    setSearchInput('');
+    setCurrentPage(1);
+  };
+
   return (
     <PageLayout>
       {/* Hero Section */}
@@ -29,21 +76,23 @@ const Index = () => {
             </p>
 
             {/* Search Bar */}
-            <div className="max-w-2xl mx-auto mb-12">
+            <form onSubmit={handleSearchSubmit} className="max-w-2xl mx-auto mb-12">
               <div className="flex flex-col md:flex-row gap-3 p-2 rounded-2xl bg-background shadow-glow border border-border">
                 <div className="flex-1 flex items-center gap-2 px-4">
                   <Search className="w-5 h-5 text-muted-foreground" />
                   <Input
                     placeholder="Caută poziție sau tehnologie..."
                     className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
                   />
                 </div>
-                <Button size="lg" className="bg-gradient-primary hover:shadow-button transition-smooth md:w-auto w-full">
+                <Button type="submit" size="lg" className="bg-gradient-primary hover:shadow-button transition-smooth md:w-auto w-full">
                   <Search className="w-5 h-5 mr-2" />
                   Caută joburi
                 </Button>
               </div>
-            </div>
+            </form>
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
@@ -70,8 +119,35 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Job Listings Section */}
+      <section className="py-12 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Filters Sidebar */}
+            <div className="lg:col-span-1">
+              <JobFilters
+                filters={filters}
+                onChange={handleFiltersChange}
+                onReset={handleFiltersReset}
+              />
+            </div>
+
+            {/* Job List */}
+            <div className="lg:col-span-3">
+              <JobList
+                jobs={jobs}
+                isLoading={isLoading}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
-      <section className="py-20 bg-background">
+      <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="font-heading font-bold text-3xl md:text-4xl mb-4">
