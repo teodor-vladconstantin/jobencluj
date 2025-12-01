@@ -165,7 +165,7 @@ const JobDetailsPage = () => {
     <PageLayout>
       <SEO
         title={`${job.title} - ${job.company_name}`}
-        description={`${job.description?.substring(0, 155)}... | ${JOB_TYPE_LABELS[job.job_type]} | ${job.location} | Aplică în <30 secunde pe joben.eu`}
+        description={`${job.description?.substring(0, 155)}... | ${JOB_TYPE_LABELS[job.job_type]} | ${job.location} | Aplică în <30 secunde pe Joben.eu`}
         canonical={`https://joben.eu/jobs/${job.id}`}
         ogType="article"
         structuredData={[

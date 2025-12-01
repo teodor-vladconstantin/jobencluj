@@ -12,7 +12,7 @@ export const generateJobPostingSchema = (job: Job, companyName?: string) => {
     description: job.description || '',
     identifier: {
       '@type': 'PropertyValue',
-      name: 'joben.eu',
+      name: 'Joben.eu',
       value: job.id,
     },
     datePosted: job.created_at,
@@ -52,7 +52,7 @@ export const generateOrganizationSchema = () => {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'joben.eu',
+    name: 'Joben.eu',
     url: 'https://joben.eu',
     logo: 'https://joben.eu/logo.png',
     description: 'Platformă de job-uri în România - Aplică în mai puțin de 30 de secunde',
@@ -102,7 +102,7 @@ export const generateHowToSchema = (steps: Array<{ name: string; text: string }>
   return {
     '@context': 'https://schema.org',
     '@type': 'HowTo',
-    name: 'Cum să aplici la un job pe joben.eu',
+    name: 'Cum să aplici la un job pe Joben.eu',
     description: 'Ghid pas cu pas pentru aplicarea rapidă la joburi',
     step: steps.map((step, index) => ({
       '@type': 'HowToStep',
@@ -117,7 +117,7 @@ export const generateLocalBusinessSchema = (jobLocation?: string) => {
   return {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
-    name: 'joben.eu',
+    name: 'Joben.eu',
     image: 'https://joben.eu/logo.png',
     '@id': 'https://joben.eu',
     url: 'https://joben.eu',
@@ -153,7 +153,7 @@ export const generateWebsiteSchema = () => {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'joben.eu',
+    name: 'Joben.eu',
     url: 'https://joben.eu',
     potentialAction: {
       '@type': 'SearchAction',

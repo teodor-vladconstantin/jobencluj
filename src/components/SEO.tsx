@@ -25,7 +25,7 @@ export const SEO = ({
   nofollow = false,
   alternateLanguages = [],
 }: SEOProps) => {
-  const fullTitle = title ? `${title} | joben.eu` : 'joben.eu - Aplică la joburi în <30 secunde';
+  const fullTitle = title ? `${title} | Joben.eu` : 'Joben.eu - Aplică la joburi în <30 secunde';
   const metaRobots = [];
   if (noindex) metaRobots.push('noindex');
   if (nofollow) metaRobots.push('nofollow');
@@ -47,7 +47,7 @@ export const SEO = ({
       <meta property="og:description" content={description} />
       <meta property="og:type" content={ogType} />
       <meta property="og:image" content={ogImage} />
-      <meta property="og:site_name" content="joben.eu" />
+      <meta property="og:site_name" content="Joben.eu" />
       {canonical && <meta property="og:url" content={canonical} />}
       
       {/* Twitter Card */}
