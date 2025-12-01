@@ -7,7 +7,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           <div className="col-span-1 md:col-span-2">
             <Link to="/" className="flex items-center gap-2 font-heading font-bold text-xl mb-4">
-              <img src="/logo.png" alt="Joben.eu" className="w-8 h-8 rounded-lg" />
+              <img src="/logo.png" alt="Joben.eu" className="w-10 h-10 rounded-lg" />
               <span className="bg-gradient-primary bg-clip-text text-transparent">
                 Joben.eu
               </span>

@@ -40,7 +40,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-heading font-bold text-xl">
-            <img src="/logo.png" alt="Joben.eu" className="w-8 h-8 rounded-lg" />
+            <img src="/logo.png" alt="Joben.eu" className="w-10 h-10 rounded-lg" />
             <span className="bg-gradient-primary bg-clip-text text-transparent">
               Joben.eu
             </span>
