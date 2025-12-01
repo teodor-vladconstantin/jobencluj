@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { Briefcase } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -8,11 +7,9 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           <div className="col-span-1 md:col-span-2">
             <Link to="/" className="flex items-center gap-2 font-heading font-bold text-xl mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <Briefcase className="w-5 h-5 text-white" />
-              </div>
+              <img src="/logo.png" alt="Joben.eu" className="w-8 h-8 rounded-lg" />
               <span className="bg-gradient-primary bg-clip-text text-transparent">
-                joben.eu
+                Joben.eu
               </span>
             </Link>
             <p className="text-sm text-muted-foreground max-w-md">

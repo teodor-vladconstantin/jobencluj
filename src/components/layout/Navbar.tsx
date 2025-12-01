@@ -2,7 +2,7 @@ import React from 'react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Briefcase, LogIn, UserPlus, LogOut, User, Bookmark, FileText, LayoutDashboard, Sun, Moon } from 'lucide-react';
+import { LogIn, UserPlus, LogOut, User, Bookmark, FileText, LayoutDashboard, Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
@@ -40,11 +40,9 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-heading font-bold text-xl">
-            <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <Briefcase className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo.png" alt="Joben.eu" className="w-8 h-8 rounded-lg" />
             <span className="bg-gradient-primary bg-clip-text text-transparent">
-              joben.eu
+              Joben.eu
             </span>
           </Link>
 
