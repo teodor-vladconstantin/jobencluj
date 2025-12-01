@@ -12,6 +12,8 @@ interface Profile {
   cv_url: string | null;
   company_name: string | null;
   company_website: string | null;
+  company_logo: string | null;
+  company_description: string | null;
 }
 
 interface AuthContextType {

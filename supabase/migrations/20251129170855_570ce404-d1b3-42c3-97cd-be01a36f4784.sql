@@ -32,7 +32,7 @@ CREATE TABLE public.jobs (
   salary_min INTEGER CHECK (salary_min >= 0),
   salary_max INTEGER CHECK (salary_max >= salary_min),
   salary_public BOOLEAN DEFAULT FALSE,
-  tech_stack TEXT[] DEFAULT '{}',
+  -- tech_stack TEXT[] DEFAULT '{}', -- Eliminat pentru job board general
   description TEXT NOT NULL CHECK (char_length(description) >= 50),
   requirements TEXT NOT NULL,
   status public.job_status DEFAULT 'active' NOT NULL,

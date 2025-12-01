@@ -9,7 +9,7 @@ interface UseJobsParams {
   location?: string;
   jobTypes?: string[];
   seniorities?: string[];
-  techStack?: string[];
+  // techStack?: string[]; // Eliminat pentru job board general
   page?: number;
   pageSize?: number;
 }
@@ -27,12 +27,12 @@ export const useJobs = ({
   location = 'all',
   jobTypes = [],
   seniorities = [],
-  techStack = [],
+  // techStack = [],
   page = 1,
   pageSize = 20,
 }: UseJobsParams = {}): UseJobsResult => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['jobs', search, location, jobTypes, seniorities, techStack, page],
+    queryKey: ['jobs', search, location, jobTypes, seniorities, page],
     queryFn: async () => {
       let query = supabase
         .from('jobs')
@@ -58,11 +58,6 @@ export const useJobs = ({
       // Seniority filter
       if (seniorities.length > 0) {
         query = query.in('seniority', seniorities as any);
-      }
-
-      // Tech stack filter
-      if (techStack.length > 0) {
-        query = query.overlaps('tech_stack', techStack);
       }
 
       // Pagination

@@ -28,6 +28,17 @@ export const truncateText = (text: string, maxLength: number): string => {
   return text.slice(0, maxLength) + '...';
 };
 
+export const getCompanyLogoUrl = (logoPath: string | null): string | undefined => {
+  if (!logoPath) return undefined;
+  
+  // Dacă path-ul este deja un URL complet, returnează-l
+  if (logoPath.startsWith('http')) return logoPath;
+  
+  // Altfel, construiește URL-ul din Supabase Storage
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+  return `${SUPABASE_URL}/storage/v1/object/public/logos/${logoPath}`;
+};
+
 export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   wait: number

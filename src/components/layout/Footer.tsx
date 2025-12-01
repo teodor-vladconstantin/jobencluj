@@ -5,7 +5,7 @@ const Footer = () => {
   return (
     <footer className="border-t border-border bg-muted/30 py-12">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           <div className="col-span-1 md:col-span-2">
             <Link to="/" className="flex items-center gap-2 font-heading font-bold text-xl mb-4">
               <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
@@ -16,7 +16,7 @@ const Footer = () => {
               </span>
             </Link>
             <p className="text-sm text-muted-foreground max-w-md">
-              Platforma unde aplici la joburi în tech în mai puțin de 30 de secunde. 
+              Platforma unde aplici la joburi în mai puțin de 30 de secunde.
               Fără formularе interminabile.
             </p>
           </div>
@@ -36,10 +36,20 @@ const Footer = () => {
               <li><Link to="/login" className="hover:text-primary transition-smooth">Intră în cont</Link></li>
             </ul>
           </div>
+
+          <div>
+            <h3 className="font-heading font-semibold mb-4">Legal</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><Link to="/about" className="hover:text-primary transition-smooth">Despre noi</Link></li>
+              <li><Link to="/contact" className="hover:text-primary transition-smooth">Contact</Link></li>
+              <li><Link to="/terms" className="hover:text-primary transition-smooth">Termeni și condiții</Link></li>
+              <li><Link to="/privacy" className="hover:text-primary transition-smooth">Politica de confidențialitate</Link></li>
+            </ul>
+          </div>
         </div>
 
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2024 joben.eu. Toate drepturile rezervate.</p>
+          <p>&copy; 2025 joben.eu. Toate drepturile rezervate.</p>
         </div>
       </div>
     </footer>

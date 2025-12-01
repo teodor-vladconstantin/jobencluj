@@ -2,6 +2,7 @@ import PageLayout from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Building, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -21,6 +22,7 @@ const RegisterPage = () => {
     fullName: '',
     role: 'candidate',
     companyName: '',
+    acceptTerms: false,
   });
   const [errors, setErrors] = useState<Partial<Record<keyof RegisterFormData, string>>>({});
   const [loading, setLoading] = useState(false);
@@ -30,7 +32,7 @@ const RegisterPage = () => {
     if (user && profile) {
       const redirectPath = profile.role === 'candidate' 
         ? '/dashboard/candidate' 
-        : '/dashboard/employer';
+        : '/employer/onboarding';
       navigate(redirectPath, { replace: true });
     }
   }, [user, profile, navigate]);
@@ -265,6 +267,42 @@ const RegisterPage = () => {
                   <p className="mt-1 text-sm text-destructive flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
                     {errors.confirmPassword}
+                  </p>
+                )}
+              </div>
+
+              {/* Terms and Conditions */}
+              <div className="space-y-2">
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="acceptTerms"
+                    checked={formData.acceptTerms}
+                    onCheckedChange={(checked) => {
+                      setFormData(prev => ({ ...prev, acceptTerms: checked as boolean }));
+                      if (errors.acceptTerms) {
+                        setErrors(prev => ({ ...prev, acceptTerms: undefined }));
+                      }
+                    }}
+                    disabled={loading}
+                  />
+                  <label
+                    htmlFor="acceptTerms"
+                    className="text-sm text-muted-foreground leading-tight cursor-pointer"
+                  >
+                    Accept{' '}
+                    <Link to="/terms" className="text-primary hover:underline" target="_blank">
+                      termenii și condițiile
+                    </Link>
+                    {' '}și{' '}
+                    <Link to="/privacy" className="text-primary hover:underline" target="_blank">
+                      politica de confidențialitate
+                    </Link>
+                  </label>
+                </div>
+                {errors.acceptTerms && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.acceptTerms}
                   </p>
                 )}
               </div>

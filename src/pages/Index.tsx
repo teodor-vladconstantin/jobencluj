@@ -15,7 +15,6 @@ const Index = () => {
     location: 'all',
     jobTypes: [],
     seniorities: [],
-    techStack: [],
   });
 
   const debouncedSearch = useDebounce(searchInput, 300);
@@ -25,7 +24,6 @@ const Index = () => {
     location: filters.location,
     jobTypes: filters.jobTypes,
     seniorities: filters.seniorities,
-    techStack: filters.techStack,
     page: currentPage,
     pageSize: 20,
   });
@@ -33,6 +31,11 @@ const Index = () => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
+    // Scroll to jobs section
+    const jobsSection = document.getElementById('jobs-section');
+    if (jobsSection) {
+      jobsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   const handleFiltersChange = (newFilters: JobFiltersState) => {
@@ -45,7 +48,6 @@ const Index = () => {
       location: 'all',
       jobTypes: [],
       seniorities: [],
-      techStack: [],
     });
     setSearchInput('');
     setCurrentPage(1);
@@ -54,17 +56,17 @@ const Index = () => {
   return (
     <PageLayout>
       {/* Hero Section */}
-      <section className="relative bg-gradient-hero py-20 md:py-32 overflow-hidden">
+      <section className="relative bg-gradient-hero py-20 md:py-32 overflow-hidden min-h-screen w-full max-w-full">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 animate-fade-in">
               <Sparkles className="w-4 h-4" />
-              Aplică instant la joburi în tech
+              Aplică instant la joburi
             </div>
             
             <h1 className="font-heading font-extrabold text-4xl md:text-6xl lg:text-7xl mb-6 leading-tight">
-              Aplică la joburi în{' '}
+              Aplică la joburi rapid
               <span className="bg-gradient-primary bg-clip-text text-transparent">
                 &lt;30 secunde
               </span>
@@ -81,7 +83,7 @@ const Index = () => {
                 <div className="flex-1 flex items-center gap-2 px-4">
                   <Search className="w-5 h-5 text-muted-foreground" />
                   <Input
-                    placeholder="Caută poziție sau tehnologie..."
+                    placeholder="Caută poziție sau job..."
                     className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
@@ -120,7 +122,7 @@ const Index = () => {
       </section>
 
       {/* Job Listings Section */}
-      <section className="py-12 bg-background">
+      <section id="jobs-section" className="py-12 bg-background">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Filters Sidebar */}

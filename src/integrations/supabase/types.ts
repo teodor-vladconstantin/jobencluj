@@ -16,30 +16,42 @@ export type Database = {
     Tables: {
       applications: {
         Row: {
-          candidate_id: string
+          candidate_id: string | null
           cover_letter: string | null
           created_at: string
           cv_url: string
+          guest_email: string | null
+          guest_linkedin_url: string | null
+          guest_name: string | null
+          guest_phone: string | null
           id: string
           job_id: string
           status: Database["public"]["Enums"]["application_status"]
           viewed_at: string | null
         }
         Insert: {
-          candidate_id: string
+          candidate_id?: string | null
           cover_letter?: string | null
           created_at?: string
           cv_url: string
+          guest_email?: string | null
+          guest_linkedin_url?: string | null
+          guest_name?: string | null
+          guest_phone?: string | null
           id?: string
           job_id: string
           status?: Database["public"]["Enums"]["application_status"]
           viewed_at?: string | null
         }
         Update: {
-          candidate_id?: string
+          candidate_id?: string | null
           cover_letter?: string | null
           created_at?: string
           cv_url?: string
+          guest_email?: string | null
+          guest_linkedin_url?: string | null
+          guest_name?: string | null
+          guest_phone?: string | null
           id?: string
           job_id?: string
           status?: Database["public"]["Enums"]["application_status"]
@@ -64,6 +76,8 @@ export type Database = {
       }
       jobs: {
         Row: {
+          company_description: string | null
+          company_logo: string | null
           company_name: string
           created_at: string
           description: string
@@ -78,11 +92,13 @@ export type Database = {
           salary_public: boolean | null
           seniority: Database["public"]["Enums"]["seniority_level"]
           status: Database["public"]["Enums"]["job_status"]
-          tech_stack: string[] | null
+          tech_stack: null
           title: string
           updated_at: string
         }
         Insert: {
+          company_description?: string | null
+          company_logo?: string | null
           company_name: string
           created_at?: string
           description: string
@@ -97,11 +113,13 @@ export type Database = {
           salary_public?: boolean | null
           seniority: Database["public"]["Enums"]["seniority_level"]
           status?: Database["public"]["Enums"]["job_status"]
-          tech_stack?: string[] | null
+          tech_stack?: null
           title: string
           updated_at?: string
         }
         Update: {
+          company_description?: string | null
+          company_logo?: string | null
           company_name?: string
           created_at?: string
           description?: string
@@ -132,6 +150,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          company_description: string | null
+          company_logo: string | null
           company_name: string | null
           company_website: string | null
           created_at: string
@@ -145,6 +165,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          company_description?: string | null
+          company_logo?: string | null
           company_name?: string | null
           company_website?: string | null
           created_at?: string
@@ -158,6 +180,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          company_description?: string | null
+          company_logo?: string | null
           company_name?: string | null
           company_website?: string | null
           created_at?: string
