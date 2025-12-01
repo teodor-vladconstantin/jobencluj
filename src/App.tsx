@@ -36,7 +36,6 @@ const App = () => (
           <AuthProvider>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:jobId" element={<JobDetailsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

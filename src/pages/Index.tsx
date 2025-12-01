@@ -264,11 +264,11 @@ const Index = () => {
                 Înregistrare gratuită
               </Button>
             </Link>
-            <Link to="/jobs">
+            <a href="#jobs-section">
               <Button size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/30">
                 Vezi joburi
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </section>
