@@ -48,6 +48,12 @@ const Navbar = () => {
 
           {/* Desktop menu */}
           <div className="hidden md:flex items-center gap-3">
+            <Link to="/jobs">
+              <Button variant="ghost" size="sm">
+                Joburi
+              </Button>
+            </Link>
+            
             {/* Theme toggle button */}
             <Button
               variant="ghost"

@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { RoleRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
+import Jobs from "./pages/Jobs";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import CandidateDashboard from "./pages/CandidateDashboard";
@@ -35,6 +36,7 @@ const App = () => (
           <AuthProvider>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:jobId" element={<JobDetailsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

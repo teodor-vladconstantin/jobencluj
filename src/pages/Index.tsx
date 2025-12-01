@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import PageLayout from '@/components/layout/PageLayout';
+import { PageLayout } from '@/components/layout/PageLayout';
 import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Search, Zap, Clock, Sparkles } from 'lucide-react';
 import JobFilters, { JobFiltersState } from '@/components/jobs/JobFilters';
@@ -258,12 +259,16 @@ const Index = () => {
             Înregistrează-te acum și aplică la primul job în mai puțin de un minut
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="shadow-button">
-              Înregistrare gratuită
-            </Button>
-            <Button size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/30">
-              Vezi joburi
-            </Button>
+            <Link to="/register">
+              <Button size="lg" variant="secondary" className="shadow-button">
+                Înregistrare gratuită
+              </Button>
+            </Link>
+            <Link to="/jobs">
+              <Button size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/30">
+                Vezi joburi
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
