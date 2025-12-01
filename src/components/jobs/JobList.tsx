@@ -140,4 +140,5 @@ const JobList = ({
   );
 };
 
+export { JobList };
 export default JobList;

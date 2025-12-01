@@ -122,4 +122,5 @@ const JobFilters = ({ filters, onChange, onReset }: JobFiltersProps) => {
   );
 };
 
+export { JobFilters };
 export default JobFilters;
