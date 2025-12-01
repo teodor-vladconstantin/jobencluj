@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
+import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Zap, Clock, Sparkles } from 'lucide-react';
@@ -7,6 +8,12 @@ import JobFilters, { JobFiltersState } from '@/components/jobs/JobFilters';
 import JobList from '@/components/jobs/JobList';
 import { useJobs } from '@/hooks/useJobs';
 import { useDebounce } from '@/hooks/useDebounce';
+import { 
+  generateWebsiteSchema, 
+  generateOrganizationSchema,
+  generateHowToSchema,
+  generateFAQSchema
+} from '@/lib/schema';
 
 const Index = () => {
   const [searchInput, setSearchInput] = useState('');
@@ -53,8 +60,49 @@ const Index = () => {
     setCurrentPage(1);
   };
 
+  const howToSteps = [
+    { name: 'Caută jobul dorit', text: 'Folosește bara de căutare sau filtrele pentru a găsi jobul perfect pentru tine.' },
+    { name: 'Click pe "Aplică acum"', text: 'Apasă butonul de aplicare de pe cardul jobului sau din pagina de detalii.' },
+    { name: 'Completează formularul rapid', text: 'Introdu doar datele esențiale: nume, email, telefon și CV. Fără formulare interminabile!' },
+    { name: 'Trimite aplicația', text: 'Apasă "Trimite" și gata! Aplicația ta ajunge instant la angajator.' },
+  ];
+
+  const faqs = [
+    { 
+      question: 'Cât de rapid pot aplica la un job?', 
+      answer: 'Poți aplica la orice job în mai puțin de 30 de secunde. Nu avem formulare lungi sau procese complicate.' 
+    },
+    { 
+      question: 'Trebuie să am cont pentru a aplica?', 
+      answer: 'Nu, poți aplica și ca guest. Însă având cont îți salvezi datele și poți urmări aplicațiile tale.' 
+    },
+    { 
+      question: 'Ce tipuri de joburi găsesc?', 
+      answer: 'Avem joburi remote, hybrid și onsite în toată România, pentru toate nivelurile de experiență.' 
+    },
+    { 
+      question: 'Este gratuit pentru candidați?', 
+      answer: 'Da, aplicarea la joburi este 100% gratuită pentru candidați. Zero taxe ascunse.' 
+    },
+  ];
+
   return (
     <PageLayout>
+      <SEO
+        title="Aplică la joburi în <30 secunde"
+        description="Platformă de joburi în România. Aplică instant la joburi remote, hybrid și onsite. Fără formulare interminabile. Găsește-ți jobul perfect astăzi!"
+        canonical="https://joben.eu/"
+        structuredData={[
+          generateWebsiteSchema(),
+          generateOrganizationSchema(),
+          generateHowToSchema(howToSteps),
+          generateFAQSchema(faqs),
+        ]}
+        alternateLanguages={[
+          { lang: 'ro', href: 'https://joben.eu/' },
+          { lang: 'x-default', href: 'https://joben.eu/' },
+        ]}
+      />
       {/* Hero Section */}
       <section className="relative bg-gradient-hero py-20 md:py-32 overflow-hidden min-h-screen w-full max-w-full">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
@@ -106,15 +154,15 @@ const Index = () => {
               </div>
               <div className="text-center">
                 <div className="text-3xl font-heading font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-                  100+
+                  &lt;1 min
                 </div>
-                <p className="text-sm text-muted-foreground">Joburi active</p>
+                <p className="text-sm text-muted-foreground">Postezi job în</p>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-heading font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-                  500+
+                  24/7
                 </div>
-                <p className="text-sm text-muted-foreground">Aplicări de succes</p>
+                <p className="text-sm text-muted-foreground">Vizibilitate maximă</p>
               </div>
             </div>
           </div>

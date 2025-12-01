@@ -27,19 +27,25 @@ const postJobSchema = z.object({
   seniority: z.enum(['junior', 'mid', 'senior', 'lead'], {
     errorMap: () => ({ message: 'Nivelul de senioritate este obligatoriu' })
   }),
-  salary_min: z.number({
-    required_error: 'Salariul minim este obligatoriu',
-    invalid_type_error: 'Salariul trebuie să fie un număr'
-  }).min(0, 'Salariul minim trebuie să fie pozitiv'),
-  salary_max: z.number({
-    required_error: 'Salariul maxim este obligatoriu',
-    invalid_type_error: 'Salariul trebuie să fie un număr'
-  }).min(0, 'Salariul maxim trebuie să fie pozitiv'),
+  salary_min: z.number().optional().nullable(),
+  salary_max: z.number().optional().nullable(),
   salary_public: z.boolean().default(false),
+  salary_in_description: z.boolean().default(false),
+  no_salary_disclosure: z.boolean().default(false),
   job_description: z.string().min(150, 'Job Description trebuie să aibă minim 150 caractere'),
   acceptTerms: z.boolean().optional(),
-}).refine(data => data.salary_max >= data.salary_min, {
-  message: 'Salariul maxim trebuie să fie mai mare sau egal cu minimul',
+}).refine(data => {
+  // Dacă se completează salariul, ambele câmpuri trebuie completate
+  if ((data.salary_min && !data.salary_max) || (!data.salary_min && data.salary_max)) {
+    return false;
+  }
+  // Dacă ambele sunt completate, max >= min
+  if (data.salary_min && data.salary_max && data.salary_max < data.salary_min) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Dacă introduci salariul, ambele valori trebuie completate și salariul maxim trebuie să fie mai mare sau egal cu minimul',
   path: ['salary_max'],
 });
 
@@ -54,6 +60,8 @@ const PostJobPage = () => {
 
   const [formData, setFormData] = useState<Partial<PostJobFormData>>({
     salary_public: false,
+    salary_in_description: false,
+    no_salary_disclosure: false,
     location: undefined,
     job_type: undefined,
     seniority: undefined,
@@ -129,16 +137,25 @@ const PostJobPage = () => {
     try {
       // Validare Zod
       const validatedData = postJobSchema.parse(formData);
+      
+      // Prep Job Description - adaug\u0103 salariul dac\u0103 e bifat
+      let finalDescription = validatedData.job_description;
+      
+      if (validatedData.salary_in_description && validatedData.salary_min && validatedData.salary_max) {
+        const salaryText = `\n\n---\n\n**💰 Salariu:** ${validatedData.salary_min.toLocaleString('ro-RO')} - ${validatedData.salary_max.toLocaleString('ro-RO')} RON net/lun\u0103`;
+        finalDescription += salaryText;
+      }
+      
       const jobData = {
         title: validatedData.title,
         company_name: validatedData.company_name,
         location: validatedData.location,
         job_type: validatedData.job_type,
         seniority: validatedData.seniority,
-        salary_min: validatedData.salary_min,
-        salary_max: validatedData.salary_max,
-        salary_public: validatedData.salary_public,
-        description: validatedData.job_description,
+        salary_min: validatedData.salary_min || null,
+        salary_max: validatedData.salary_max || null,
+        salary_public: validatedData.salary_public || false,
+        description: finalDescription,
         requirements: validatedData.job_description,
         company_logo: profile?.company_logo || null,
         company_description: profile?.company_description || null,
@@ -385,50 +402,108 @@ const PostJobPage = () => {
           {/* 3. Salariu */}
           <Card>
             <CardHeader>
-              <CardTitle>Salariu</CardTitle>
+              <CardTitle>Salariu (opțional)</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Salary Min */}
-                <div className="space-y-2">
-                  <Label htmlFor="salary_min">Salariu minim (RON) *</Label>
-                  <Input
-                    id="salary_min"
-                    type="number"
-                    placeholder="Ex: 5000"
-                    value={formData.salary_min || ''}
-                    onChange={(e) => setFormData({ ...formData, salary_min: parseFloat(e.target.value) || 0 })}
-                    className={errors.salary_min ? 'border-destructive' : ''}
-                  />
-                  {errors.salary_min && <p className="text-sm text-destructive">{errors.salary_min}</p>}
-                </div>
-
-                {/* Salary Max */}
-                <div className="space-y-2">
-                  <Label htmlFor="salary_max">Salariu maxim (RON) *</Label>
-                  <Input
-                    id="salary_max"
-                    type="number"
-                    placeholder="Ex: 8000"
-                    value={formData.salary_max || ''}
-                    onChange={(e) => setFormData({ ...formData, salary_max: parseFloat(e.target.value) || 0 })}
-                    className={errors.salary_max ? 'border-destructive' : ''}
-                  />
-                  {errors.salary_max && <p className="text-sm text-destructive">{errors.salary_max}</p>}
-                </div>
-              </div>
-
-              {/* Salary Public */}
-              <div className="flex items-center space-x-2">
+              {/* Checkbox: Nu doresc să trec salariul */}
+              <div className="flex items-start space-x-2 p-3 bg-muted/50 rounded-lg">
                 <Checkbox
-                  id="salary_public"
-                  checked={formData.salary_public || false}
-                  onCheckedChange={(checked) => setFormData({ ...formData, salary_public: checked as boolean })}
+                  id="no_salary_disclosure"
+                  checked={formData.no_salary_disclosure || false}
+                  onCheckedChange={(checked) => {
+                    setFormData({ 
+                      ...formData, 
+                      no_salary_disclosure: checked as boolean,
+                      salary_min: checked ? null : formData.salary_min,
+                      salary_max: checked ? null : formData.salary_max,
+                      salary_public: checked ? false : formData.salary_public,
+                      salary_in_description: checked ? false : formData.salary_in_description,
+                    });
+                  }}
                 />
-                <Label htmlFor="salary_public" className="cursor-pointer">
-                  Afișează salariul public (vizibil pentru candidați)
-                </Label>
+                <div className="space-y-1">
+                  <Label htmlFor="no_salary_disclosure" className="cursor-pointer font-medium">
+                    Nu doresc să trec salariul
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Bifează dacă nu vrei să afișezi informații despre salariu
+                  </p>
+                </div>
               </div>
+
+              {/* Salary Fields - disabled dacă no_salary_disclosure */}
+              {!formData.no_salary_disclosure && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Salary Min */}
+                    <div className="space-y-2">
+                      <Label htmlFor="salary_min">Salariu minim (RON)</Label>
+                      <Input
+                        id="salary_min"
+                        type="number"
+                        placeholder="Ex: 5000"
+                        value={formData.salary_min || ''}
+                        onChange={(e) => setFormData({ ...formData, salary_min: e.target.value ? parseFloat(e.target.value) : null })}
+                        className={errors.salary_min ? 'border-destructive' : ''}
+                      />
+                      {errors.salary_min && <p className="text-sm text-destructive">{errors.salary_min}</p>}
+                    </div>
+
+                    {/* Salary Max */}
+                    <div className="space-y-2">
+                      <Label htmlFor="salary_max">Salariu maxim (RON)</Label>
+                      <Input
+                        id="salary_max"
+                        type="number"
+                        placeholder="Ex: 8000"
+                        value={formData.salary_max || ''}
+                        onChange={(e) => setFormData({ ...formData, salary_max: e.target.value ? parseFloat(e.target.value) : null })}
+                        className={errors.salary_max ? 'border-destructive' : ''}
+                      />
+                      {errors.salary_max && <p className="text-sm text-destructive">{errors.salary_max}</p>}
+                    </div>
+                  </div>
+
+                  {/* Opțiuni salariu */}
+                  {(formData.salary_min || formData.salary_max) && (
+                    <div className="space-y-3 pt-2 border-t">
+                      {/* Salary Public */}
+                      <div className="flex items-start space-x-2">
+                        <Checkbox
+                          id="salary_public"
+                          checked={formData.salary_public || false}
+                          onCheckedChange={(checked) => setFormData({ ...formData, salary_public: checked as boolean })}
+                        />
+                        <div className="space-y-1">
+                          <Label htmlFor="salary_public" className="cursor-pointer">
+                            Afișează salariul public
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Salariul va fi vizibil pentru toți candidații pe listingul de joburi
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Salary in Description */}
+                      <div className="flex items-start space-x-2">
+                        <Checkbox
+                          id="salary_in_description"
+                          checked={formData.salary_in_description || false}
+                          onCheckedChange={(checked) => setFormData({ ...formData, salary_in_description: checked as boolean })}
+                        />
+                        <div className="space-y-1">
+                          <Label htmlFor="salary_in_description" className="cursor-pointer">
+                            Treci salariul în descriere (recomandat)
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Salariul va fi adăugat automat la finalul descrierii jobului
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
 

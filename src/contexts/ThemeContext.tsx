@@ -12,8 +12,11 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
+    // SSR safe - only access localStorage in browser
+    if (typeof window === 'undefined') return 'light';
+    
     // Check localStorage first
-    const stored = localStorage.getItem('theme') as Theme | null;
+    const stored = window.localStorage.getItem('theme') as Theme | null;
     if (stored) return stored;
     
     // Check system preference
@@ -24,6 +27,9 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   });
 
   useEffect(() => {
+    // SSR safe - only run in browser
+    if (typeof window === 'undefined') return;
+    
     const root = document.documentElement;
     
     if (theme === 'dark') {
@@ -32,7 +38,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       root.classList.remove('dark');
     }
     
-    localStorage.setItem('theme', theme);
+    window.localStorage.setItem('theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {

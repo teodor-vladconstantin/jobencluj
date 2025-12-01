@@ -5,6 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import PageLayout from '@/components/layout/PageLayout';
+import { SEO } from '@/components/SEO';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +27,12 @@ import {
 } from 'lucide-react';
 import { formatRelativeTime, formatSalary, getCompanyLogoUrl } from '@/lib/helpers';
 import { JOB_TYPE_LABELS, SENIORITY_LABELS } from '@/lib/constants';
+import { 
+  generateJobPostingSchema, 
+  generateBreadcrumbSchema,
+  generateOrganizationSchema,
+  generateFAQSchema
+} from '@/lib/schema';
 import type { Database } from '@/integrations/supabase/types';
 
 type Job = Database['public']['Tables']['jobs']['Row'];
@@ -42,14 +50,20 @@ const JobDetailsPage = () => {
   const { data: job, isLoading, error } = useQuery({
     queryKey: ['job', jobId],
     queryFn: async () => {
+      // First try to get the job regardless of status
       const { data, error } = await supabase
         .from('jobs')
         .select('*')
         .eq('id', jobId)
-        .eq('status', 'active')
         .single();
 
       if (error) throw error;
+      
+      // If job is not active, check if user is the owner
+      if (data.status !== 'active' && data.employer_id !== profile?.id) {
+        throw new Error('Job not found or not accessible');
+      }
+      
       return data as Job;
     },
     enabled: !!jobId,
@@ -132,9 +146,52 @@ const JobDetailsPage = () => {
     );
   }
 
+  const jobFAQs = [
+    {
+      question: `Cum aplic la ${job.title}?`,
+      answer: `Apasă butonul "Aplică acum", completează formularul rapid (nume, email, telefon, CV) și trimite aplicația. Durează mai puțin de 30 de secunde!`
+    },
+    {
+      question: `Care sunt cerințele pentru ${job.title}?`,
+      answer: job.requirements || job.description || 'Verifică descrierea jobului pentru detalii complete despre cerințe.'
+    },
+    {
+      question: `Este ${job.title} un job remote, hybrid sau onsite?`,
+      answer: `Acest job este ${JOB_TYPE_LABELS[job.job_type]}. ${job.location ? `Locația este ${job.location}.` : ''}`
+    },
+  ];
+
   return (
     <PageLayout>
+      <SEO
+        title={`${job.title} - ${job.company_name}`}
+        description={`${job.description?.substring(0, 155)}... | ${JOB_TYPE_LABELS[job.job_type]} | ${job.location} | Aplică în <30 secunde pe joben.eu`}
+        canonical={`https://joben.eu/jobs/${job.id}`}
+        ogType="article"
+        structuredData={[
+          generateJobPostingSchema(job, job.company_name),
+          generateBreadcrumbSchema([
+            { name: 'Acasă', url: 'https://joben.eu' },
+            { name: 'Joburi', url: 'https://joben.eu/#jobs' },
+            { name: job.title, url: `https://joben.eu/jobs/${job.id}` },
+          ]),
+          generateOrganizationSchema(),
+          generateFAQSchema(jobFAQs),
+        ]}
+        alternateLanguages={[
+          { lang: 'ro', href: `https://joben.eu/jobs/${job.id}` },
+          { lang: 'x-default', href: `https://joben.eu/jobs/${job.id}` },
+        ]}
+      />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Breadcrumbs for SEO */}
+        <Breadcrumbs
+          items={[
+            { label: 'Joburi', href: '/' },
+            { label: job.title },
+          ]}
+          className="mb-6"
+        />
         {/* Back button */}
         <Link
           to="/"

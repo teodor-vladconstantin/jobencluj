@@ -241,9 +241,14 @@ const CandidateDashboard = () => {
                     if (cvFile) {
                       // Delete old CV if exists
                       if (profile.cv_url) {
+                        // Extract file path from URL (remove domain and bucket path)
+                        const oldFilePath = profile.cv_url.includes('/storage/v1/object/public/cvs/')
+                          ? profile.cv_url.split('/storage/v1/object/public/cvs/')[1]
+                          : profile.cv_url;
+                        
                         await supabase.storage
                           .from('cvs')
-                          .remove([profile.cv_url]);
+                          .remove([oldFilePath]);
                       }
                       
                       const fileExt = cvFile.name.split('.').pop();
