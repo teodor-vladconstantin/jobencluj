@@ -63,7 +63,7 @@ const Index = () => {
 
   const howToSteps = [
     { name: 'Caută jobul dorit', text: 'Folosește bara de căutare sau filtrele pentru a găsi jobul perfect pentru tine.' },
-    { name: 'Click pe "Aplică acum"', text: 'Apasă butonul de aplicare de pe cardul jobului sau din pagina de detalii.' },
+    { name: 'Click pe "Aplică"', text: 'Apasă butonul "Aplică" de pe cardul jobului sau din pagina de detalii.' },
     { name: 'Completează formularul rapid', text: 'Introdu doar datele esențiale: nume, email, telefon și CV. Fără formulare interminabile!' },
     { name: 'Trimite aplicația', text: 'Apasă "Trimite" și gata! Aplicația ta ajunge instant la angajator.' },
   ];

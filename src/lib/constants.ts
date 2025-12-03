@@ -69,6 +69,7 @@ export const LOCATIONS = [
   'Brașov',
   'Constanța',
   'Craiova',
+  'Ploiești',
   'Sibiu',
   'Oradea',
   'Bacău',

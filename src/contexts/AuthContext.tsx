@@ -49,6 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       if (data) {
+        console.log('Profile updated:', data);
         setProfile(data);
       }
     } catch (error) {

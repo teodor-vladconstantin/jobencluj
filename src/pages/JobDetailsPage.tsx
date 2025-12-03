@@ -149,7 +149,7 @@ const JobDetailsPage = () => {
   const jobFAQs = [
     {
       question: `Cum aplic la ${job.title}?`,
-      answer: `Apasă butonul "Aplică acum", completează formularul rapid (nume, email, telefon, CV) și trimite aplicația. Durează mai puțin de 30 de secunde!`
+      answer: `Apasă butonul "Aplică", completează formularul rapid (nume, email, telefon, CV) și trimite aplicația. Durează mai puțin de 30 de secunde!`
     },
     {
       question: `Care sunt cerințele pentru ${job.title}?`,
@@ -207,14 +207,21 @@ const JobDetailsPage = () => {
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
               <div className="flex items-start gap-4 flex-1">
                 {/* Company Logo */}
-                <Avatar className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0">
-                  <AvatarImage 
-                    src={getCompanyLogoUrl(job.company_logo)} 
+                <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 rounded-xl bg-primary/5 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={getCompanyLogoUrl(job.company_logo)}
+                    alt={job.company_name || 'Company'}
+                    className="w-full h-full object-contain p-2"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
                   />
-                  <AvatarFallback className="text-2xl bg-primary/10 text-primary font-semibold">
+                  <div className="hidden w-full h-full items-center justify-center text-xl font-semibold text-primary">
                     {job.company_name?.charAt(0)?.toUpperCase() || 'C'}
-                  </AvatarFallback>
-                </Avatar>
+                  </div>
+                </div>
                 
                 <div className="flex-1">
                   <h1 className="text-2xl md:text-3xl font-heading font-bold mb-2">
@@ -261,9 +268,9 @@ const JobDetailsPage = () => {
 
               {/* Apply button */}
               <div className="flex flex-col gap-2">
-                <Button size="lg" onClick={handleApplyClick} className="w-full md:w-auto">
+                <Button size="lg" onClick={handleApplyClick} className="w-full md:w-auto bg-gradient-primary hover:bg-green-600 hover:text-white transition-all">
                   <Send className="w-4 h-4 mr-2" />
-                  Aplică acum
+                  Aplică
                 </Button>
               </div>
             </div>
@@ -274,31 +281,23 @@ const JobDetailsPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Description */}
+            {/* Job Description */}
             <Card>
               <CardContent className="p-6">
                 <h2 className="text-xl font-heading font-semibold mb-4">
-                  Descrierea jobului
+                  Job Description
                 </h2>
                 <div className="prose prose-sm max-w-none text-muted-foreground whitespace-pre-wrap">
                   {job.description}
+                  {job.requirements && (
+                    <>
+                      {'\n\n'}
+                      {job.requirements}
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
-
-            {/* Requirements */}
-            {job.requirements && (
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-heading font-semibold mb-4">
-                    Cerințe
-                  </h2>
-                  <div className="prose prose-sm max-w-none text-muted-foreground whitespace-pre-wrap">
-                    {job.requirements}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* Sidebar */}
@@ -309,14 +308,21 @@ const JobDetailsPage = () => {
                 <h3 className="font-heading font-semibold mb-4">Despre companie</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 mb-4">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage 
-                        src={getCompanyLogoUrl(job.company_logo)} 
+                    <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-primary/5 flex items-center justify-center overflow-hidden">
+                      <img
+                        src={getCompanyLogoUrl(job.company_logo)}
+                        alt={job.company_name || 'Company'}
+                        className="w-full h-full object-contain p-2"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
                       />
-                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      <div className="hidden w-full h-full items-center justify-center text-sm font-semibold text-primary">
                         {job.company_name?.charAt(0)?.toUpperCase() || 'C'}
-                      </AvatarFallback>
-                    </Avatar>
+                      </div>
+                    </div>
                     <div>
                       <p className="font-medium">{job.company_name}</p>
                       <p className="text-sm text-muted-foreground">{job.location}</p>
@@ -338,12 +344,9 @@ const JobDetailsPage = () => {
                 <h3 className="font-heading font-semibold mb-2">
                   Interesat de acest job?
                 </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Aplică acum și fii contactat de angajator
-                </p>
-                <Button onClick={handleApplyClick} className="w-full">
+                <Button onClick={handleApplyClick} className="w-full mt-2 bg-gradient-primary hover:bg-green-600 hover:text-white transition-all">
                   <Send className="w-4 h-4 mr-2" />
-                  Aplică acum
+                  Aplică
                 </Button>
               </CardContent>
             </Card>

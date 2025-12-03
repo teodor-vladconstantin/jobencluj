@@ -141,20 +141,26 @@ export const GuestApplicationModal = ({ job, isOpen, onClose, onSuccess }: Guest
       }
 
       // 2. Create application
+      const applicationData = {
+        job_id: job.id,
+        candidate_id: null, // Explicitly set to null for guest applications
+        guest_name: `${formData.firstName} ${formData.lastName}`,
+        guest_email: formData.email,
+        guest_phone: formData.phone,
+        guest_linkedin_url: formData.linkedinUrl || null,
+        cv_url: uploadedCvPath,
+        cover_letter: formData.coverLetter || null,
+        status: 'submitted' as const,
+      };
+      
+      console.log('Submitting guest application with data:', applicationData);
+      
       const { error: applicationError } = await supabase
         .from('applications')
-        .insert({
-          job_id: job.id,
-          guest_name: `${formData.firstName} ${formData.lastName}`,
-          guest_email: formData.email,
-          guest_phone: formData.phone,
-          guest_linkedin_url: formData.linkedinUrl || null,
-          cv_url: uploadedCvPath,
-          cover_letter: formData.coverLetter || null,
-          status: 'submitted',
-        });
+        .insert(applicationData);
 
       if (applicationError) {
+        console.error('Application insert error:', applicationError);
         // Check for duplicate application
         if (applicationError.code === '23505') {
           toast({
@@ -306,28 +312,6 @@ export const GuestApplicationModal = ({ job, isOpen, onClose, onSuccess }: Guest
             />
           </div>
 
-          {/* Cover Letter */}
-          <div className="space-y-2">
-            <Label htmlFor="coverLetter">
-              Scrisoare de intenție (opțional)
-            </Label>
-            <Textarea
-              id="coverLetter"
-              value={formData.coverLetter}
-              onChange={(e) => handleInputChange('coverLetter', e.target.value)}
-              placeholder="Scrie câteva cuvinte despre motivația ta..."
-              rows={4}
-              maxLength={COVER_LETTER_MAX_LENGTH}
-              disabled={isSubmitting}
-            />
-            <p className="text-xs text-muted-foreground">
-              {formData.coverLetter?.length || 0} / {COVER_LETTER_MAX_LENGTH} caractere
-            </p>
-            {errors.coverLetter && (
-              <p className="text-sm text-destructive">{errors.coverLetter}</p>
-            )}
-          </div>
-
           {/* Terms and Conditions */}
           <div className="flex items-start space-x-2">
             <Checkbox
@@ -368,7 +352,7 @@ export const GuestApplicationModal = ({ job, isOpen, onClose, onSuccess }: Guest
                   Se trimite...
                 </>
               ) : (
-                'Aplică acum'
+                'Aplică'
               )}
             </Button>
           </div>

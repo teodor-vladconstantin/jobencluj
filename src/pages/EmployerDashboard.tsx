@@ -120,6 +120,7 @@ const EmployerDashboard = () => {
   const { data: applications, isLoading: applicationsLoading } = useQuery({
     queryKey: ['employer-applications', profile?.id],
     queryFn: async () => {
+      console.log('Fetching applications for employer:', profile?.id);
       const { data, error } = await supabase
         .from('applications')
         .select(`
@@ -139,7 +140,13 @@ const EmployerDashboard = () => {
         .eq('jobs.employer_id', profile?.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching applications:', error);
+        throw error;
+      }
+      
+      console.log('Applications fetched:', data);
+      console.log('Number of applications:', data?.length || 0);
       return data as Application[];
     },
     enabled: !!profile?.id,
@@ -182,6 +189,12 @@ const EmployerDashboard = () => {
     totalApplications: applications?.length || 0,
     interviewCandidates: applications?.filter(app => app.status === 'interview').length || 0,
   };
+
+  // Debug logging for stats
+  useEffect(() => {
+    console.log('Employer Dashboard Stats:', stats);
+    console.log('Applications:', applications);
+  }, [applications, stats]);
 
   const handleStatusChange = (applicationId: string, newStatus: Database['public']['Enums']['application_status']) => {
     updateStatusMutation.mutate({ applicationId, newStatus });
@@ -255,25 +268,30 @@ const EmployerDashboard = () => {
   };
 
   const getCandidateName = (app: Application) => {
+    console.log('Getting candidate name for application:', app.id, {
+      profiles_full_name: app.profiles?.full_name,
+      guest_name: (app as any).guest_name,
+      candidate_id: app.candidate_id
+    });
     if (app.profiles?.full_name) {
       return app.profiles.full_name;
     }
-    if (app.guest_name) {
-      return `${app.guest_name} (Guest)`;
+    if ((app as any).guest_name) {
+      return `${(app as any).guest_name} (Guest)`;
     }
     return 'Candidat anonim';
   };
 
   const getCandidateEmail = (app: Application) => {
-    return app.profiles?.email || app.guest_email || 'N/A';
+    return app.profiles?.email || (app as any).guest_email || 'N/A';
   };
 
   const getCandidatePhone = (app: Application) => {
-    return app.profiles?.phone || app.guest_phone || 'N/A';
+    return app.profiles?.phone || (app as any).guest_phone || 'N/A';
   };
 
   const getCandidateLinkedIn = (app: Application) => {
-    return app.profiles?.linkedin_url || app.guest_linkedin_url || null;
+    return app.profiles?.linkedin_url || (app as any).guest_linkedin_url || null;
   };
 
   // Delete job mutation
@@ -317,10 +335,14 @@ const EmployerDashboard = () => {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['employer-jobs'] });
-      const statusLabel = variables.status === 'paused' ? 'Pauză' : 'Activ';
+      const statusMessages = {
+        active: 'Jobul este acum activ și vizibil pentru candidați',
+        paused: 'Jobul este în pauză și nu mai apare în căutări',
+        closed: 'Jobul a fost închis și nu mai primește aplicații',
+      };
       toast({
         title: 'Status actualizat',
-        description: `Jobul a fost pus în ${statusLabel}`,
+        description: statusMessages[variables.status],
       });
     },
     onError: (error) => {
@@ -457,9 +479,38 @@ const EmployerDashboard = () => {
                           <TableRow key={job.id}>
                             <TableCell className="font-medium">{job.title}</TableCell>
                             <TableCell>
-                              <Badge variant={job.status === 'active' ? 'default' : 'secondary'}>
-                                {JOB_STATUS_LABELS[job.status]}
-                              </Badge>
+                              <Select
+                                value={job.status}
+                                onValueChange={(value) => updateJobStatusMutation.mutate({ 
+                                  jobId: job.id, 
+                                  status: value as 'active' | 'paused' | 'closed' 
+                                })}
+                                disabled={updateJobStatusMutation.isPending}
+                              >
+                                <SelectTrigger className="w-32">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="active">
+                                    <span className="flex items-center gap-2">
+                                      <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                      Activ
+                                    </span>
+                                  </SelectItem>
+                                  <SelectItem value="paused">
+                                    <span className="flex items-center gap-2">
+                                      <span className="w-2 h-2 rounded-full bg-gray-500"></span>
+                                      Pauză
+                                    </span>
+                                  </SelectItem>
+                                  <SelectItem value="closed">
+                                    <span className="flex items-center gap-2">
+                                      <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                      Închis
+                                    </span>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
                             </TableCell>
                             <TableCell>
                               <span className="font-semibold">{job.applications[0]?.count || 0}</span> aplicații
@@ -487,25 +538,9 @@ const EmployerDashboard = () => {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    {job.status === 'active' ? (
-                                      <DropdownMenuItem
-                                        onClick={() => updateJobStatusMutation.mutate({ jobId: job.id, status: 'paused' })}
-                                      >
-                                        <Archive className="w-4 h-4 mr-2" />
-                                        Pune în pauză
-                                      </DropdownMenuItem>
-                                    ) : (
-                                      <DropdownMenuItem
-                                        onClick={() => updateJobStatusMutation.mutate({ jobId: job.id, status: 'active' })}
-                                      >
-                                        <Eye className="w-4 h-4 mr-2" />
-                                        Activează
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                       onClick={() => setJobToDelete(job.id)}
-                                      className="text-destructive focus:text-destructive focus:bg-destructive hover:bg-destructive hover:text-white"
+                                      className="text-destructive focus:text-destructive"
                                     >
                                       <Trash2 className="w-4 h-4 mr-2" />
                                       Șterge job
@@ -617,7 +652,7 @@ const EmployerDashboard = () => {
                                     setCvViewerState({
                                       isOpen: true,
                                       cvPath: app.cv_url,
-                                      candidateName: app.candidate_name,
+                                      candidateName: app.profiles?.full_name || null,
                                     });
                                   }}
                                 >

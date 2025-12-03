@@ -56,6 +56,13 @@ export const AuthenticatedApplicationModal = ({ job, isOpen, onClose, onSuccess 
     setIsSubmitting(true);
 
     try {
+      console.log('Submitting authenticated application:', {
+        job_id: job.id,
+        candidate_id: profile.id,
+        cv_url: profile.cv_url,
+        cover_letter: coverLetter || null,
+      });
+
       const { error } = await supabase
         .from('applications')
         .insert({
@@ -67,6 +74,7 @@ export const AuthenticatedApplicationModal = ({ job, isOpen, onClose, onSuccess 
         });
 
       if (error) {
+        console.error('Application insert error:', error);
         // Check for duplicate application
         if (error.code === '23505') {
           toast({
@@ -79,6 +87,8 @@ export const AuthenticatedApplicationModal = ({ job, isOpen, onClose, onSuccess 
         throw error;
       }
 
+      console.log('Application submitted successfully!');
+
       toast({
         title: 'Aplicație trimisă cu succes!',
         description: 'Angajatorul va vedea aplicația ta și te va contacta',
@@ -86,6 +96,7 @@ export const AuthenticatedApplicationModal = ({ job, isOpen, onClose, onSuccess 
 
       // Invalidate applications cache to refresh the list
       await queryClient.invalidateQueries({ queryKey: ['candidate-applications'] });
+      await queryClient.invalidateQueries({ queryKey: ['employer-applications'] });
 
       setCoverLetter('');
       onSuccess();
@@ -176,25 +187,6 @@ export const AuthenticatedApplicationModal = ({ job, isOpen, onClose, onSuccess 
             </div>
           </div>
 
-          {/* Cover Letter (Optional) */}
-          <div className="space-y-2">
-            <Label htmlFor="coverLetter">
-              Scrisoare de intenție (opțional)
-            </Label>
-            <Textarea
-              id="coverLetter"
-              value={coverLetter}
-              onChange={(e) => setCoverLetter(e.target.value)}
-              placeholder="Scrie câteva cuvinte despre motivația ta pentru acest job..."
-              rows={5}
-              maxLength={COVER_LETTER_MAX_LENGTH}
-              disabled={isSubmitting}
-            />
-            <p className="text-xs text-muted-foreground">
-              {coverLetter.length} / {COVER_LETTER_MAX_LENGTH} caractere
-            </p>
-          </div>
-
           {/* Terms and Conditions */}
           <div className="flex items-start space-x-2">
             <Checkbox
@@ -235,7 +227,7 @@ export const AuthenticatedApplicationModal = ({ job, isOpen, onClose, onSuccess 
                   Se trimite...
                 </>
               ) : (
-                'Aplică acum'
+                'Aplică'
               )}
             </Button>
           </div>

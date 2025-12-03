@@ -97,12 +97,21 @@ const CompanyProfile = () => {
         <Card className="mb-8">
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row gap-6 items-start">
-              <Avatar className="w-24 h-24 flex-shrink-0">
-                <AvatarImage src={getCompanyLogoUrl(company.company_logo)} />
-                <AvatarFallback className="text-3xl bg-primary/10 text-primary">
+              <div className="w-24 h-24 flex-shrink-0 rounded-xl bg-primary/5 flex items-center justify-center overflow-hidden">
+                <img
+                  src={getCompanyLogoUrl(company.company_logo)}
+                  alt={company.company_name || 'Company'}
+                  className="w-full h-full object-contain p-3"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                />
+                <div className="hidden w-full h-full items-center justify-center text-3xl font-semibold text-primary">
                   {company.company_name?.charAt(0)?.toUpperCase() || 'C'}
-                </AvatarFallback>
-              </Avatar>
+                </div>
+              </div>
 
               <div className="flex-1">
                 <h1 className="text-3xl font-heading font-bold mb-2">

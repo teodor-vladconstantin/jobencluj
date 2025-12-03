@@ -83,14 +83,21 @@ const JobCard = ({ job, onSave, isSaved = false }: JobCardProps) => {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-start gap-3 flex-1">
             {/* Company Logo */}
-            <Avatar className="w-12 h-12 flex-shrink-0">
-              <AvatarImage 
-                src={getCompanyLogoUrl(job.company_logo)} 
+            <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-primary/5 flex items-center justify-center overflow-hidden">
+              <img
+                src={getCompanyLogoUrl(job.company_logo)}
+                alt={job.company_name || 'Company'}
+                className="w-full h-full object-contain p-2"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'flex';
+                }}
               />
-              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+              <div className="hidden w-full h-full items-center justify-center text-sm font-semibold text-primary">
                 {job.company_name?.charAt(0)?.toUpperCase() || 'C'}
-              </AvatarFallback>
-            </Avatar>
+              </div>
+            </div>
             <div className="flex-1 min-w-0">
               <Link to={`/jobs/${job.id}`}>
                 <h3 className="font-heading font-semibold text-xl mb-1 group-hover:text-primary transition-smooth">
@@ -154,10 +161,10 @@ const JobCard = ({ job, onSave, isSaved = false }: JobCardProps) => {
               className="flex items-center gap-1"
             >
               <Send className="w-4 h-4" />
-              Aplică acum
+              Aplică
             </Button>
             <Link to={`/jobs/${job.id}`}>
-              <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
+              <Button variant="ghost" size="sm" className="text-primary hover:text-white hover:bg-green-600 transition-all">
                 Detalii →
               </Button>
             </Link>

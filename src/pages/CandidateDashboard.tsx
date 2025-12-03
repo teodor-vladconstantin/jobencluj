@@ -25,7 +25,7 @@ type Application = Database['public']['Tables']['applications']['Row'] & {
 };
 
 const CandidateDashboard = () => {
-  const { profile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
@@ -81,6 +81,17 @@ const CandidateDashboard = () => {
     profile?.linkedin_url &&
     profile?.cv_url
   );
+
+  // Debug logging for profile completeness
+  useEffect(() => {
+    console.log('Profile completeness check:', {
+      full_name: profile?.full_name,
+      phone: profile?.phone,
+      linkedin_url: profile?.linkedin_url,
+      cv_url: profile?.cv_url,
+      isComplete: isProfileComplete
+    });
+  }, [profile, isProfileComplete]);
 
   if (!profile) {
     return (
@@ -173,17 +184,19 @@ const CandidateDashboard = () => {
                       <TableBody>
                         {applications.map((app) => (
                           <TableRow key={app.id}>
-                            <TableCell className="font-medium">{app.jobs.title}</TableCell>
-                            <TableCell>{app.jobs.company_name}</TableCell>
+                            <TableCell className="font-medium">{app.jobs?.title || 'N/A'}</TableCell>
+                            <TableCell>{app.jobs?.company_name || 'N/A'}</TableCell>
                             <TableCell className="text-sm text-muted-foreground">
                               {formatRelativeTime(new Date(app.created_at))}
                             </TableCell>
                             <TableCell>
-                              <Button variant="ghost" size="sm" asChild>
-                                <Link to={`/jobs/${app.jobs.id}`}>
-                                  <ExternalLink className="w-4 h-4" />
-                                </Link>
-                              </Button>
+                              {app.jobs?.id && (
+                                <Button variant="ghost" size="sm" asChild>
+                                  <Link to={`/jobs/${app.jobs.id}`}>
+                                    <ExternalLink className="w-4 h-4" />
+                                  </Link>
+                                </Button>
+                              )}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -238,6 +251,10 @@ const CandidateDashboard = () => {
                   try {
                     let cvUrl = profile.cv_url;
                     
+                    console.log('Starting profile update...');
+                    console.log('Current CV URL:', profile.cv_url);
+                    console.log('New CV file:', cvFile);
+                    
                     if (cvFile) {
                       // Delete old CV if exists
                       if (profile.cv_url) {
@@ -246,6 +263,7 @@ const CandidateDashboard = () => {
                           ? profile.cv_url.split('/storage/v1/object/public/cvs/')[1]
                           : profile.cv_url;
                         
+                        console.log('Deleting old CV:', oldFilePath);
                         await supabase.storage
                           .from('cvs')
                           .remove([oldFilePath]);
@@ -254,6 +272,7 @@ const CandidateDashboard = () => {
                       const fileExt = cvFile.name.split('.').pop();
                       const fileName = `${profile.id}/${Date.now()}.${fileExt}`;
                       
+                      console.log('Uploading new CV:', fileName);
                       const { error: uploadError, data } = await supabase.storage
                         .from('cvs')
                         .upload(fileName, cvFile, { 
@@ -266,8 +285,12 @@ const CandidateDashboard = () => {
                         throw uploadError;
                       }
                       
+                      console.log('CV uploaded successfully:', data);
                       cvUrl = fileName;
                     }
+                    
+                    console.log('Updating profile in database...');
+                    console.log('Profile data:', { full_name: formData.full_name, phone: formData.phone, linkedin_url: formData.linkedin_url, cv_url: cvUrl });
                     
                     const { error } = await supabase
                       .from('profiles')
@@ -281,11 +304,10 @@ const CandidateDashboard = () => {
                     
                     if (error) throw error;
                     
-                    // Refresh profile data
-                    await queryClient.invalidateQueries({ queryKey: ['profile'] });
-                    
-                    // Reload page to refresh all data
-                    window.location.reload();
+                    console.log('Profile updated in database, refreshing...');
+                    // Refresh profile data from AuthContext
+                    await refreshProfile();
+                    console.log('Profile refreshed successfully');
                     
                     toast({
                       title: 'Profil actualizat!',
