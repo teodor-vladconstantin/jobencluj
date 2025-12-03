@@ -41,7 +41,6 @@ const CandidateDashboard = () => {
   const { data: applications, isLoading: applicationsLoading } = useQuery({
     queryKey: ['candidate-applications', profile?.id],
     queryFn: async () => {
-      console.log('Fetching applications for candidate:', profile?.id);
       const { data, error } = await supabase
         .from('applications')
         .select(`
@@ -60,11 +59,9 @@ const CandidateDashboard = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching applications:', error);
         throw error;
       }
       
-      console.log('Applications fetched:', data);
       return data as Application[];
     },
     enabled: !!profile?.id,
@@ -81,17 +78,6 @@ const CandidateDashboard = () => {
     profile?.linkedin_url &&
     profile?.cv_url
   );
-
-  // Debug logging for profile completeness
-  useEffect(() => {
-    console.log('Profile completeness check:', {
-      full_name: profile?.full_name,
-      phone: profile?.phone,
-      linkedin_url: profile?.linkedin_url,
-      cv_url: profile?.cv_url,
-      isComplete: isProfileComplete
-    });
-  }, [profile, isProfileComplete]);
 
   if (!profile) {
     return (
@@ -251,10 +237,6 @@ const CandidateDashboard = () => {
                   try {
                     let cvUrl = profile.cv_url;
                     
-                    console.log('Starting profile update...');
-                    console.log('Current CV URL:', profile.cv_url);
-                    console.log('New CV file:', cvFile);
-                    
                     if (cvFile) {
                       // Delete old CV if exists
                       if (profile.cv_url) {
@@ -263,7 +245,6 @@ const CandidateDashboard = () => {
                           ? profile.cv_url.split('/storage/v1/object/public/cvs/')[1]
                           : profile.cv_url;
                         
-                        console.log('Deleting old CV:', oldFilePath);
                         await supabase.storage
                           .from('cvs')
                           .remove([oldFilePath]);
@@ -272,7 +253,6 @@ const CandidateDashboard = () => {
                       const fileExt = cvFile.name.split('.').pop();
                       const fileName = `${profile.id}/${Date.now()}.${fileExt}`;
                       
-                      console.log('Uploading new CV:', fileName);
                       const { error: uploadError, data } = await supabase.storage
                         .from('cvs')
                         .upload(fileName, cvFile, { 
@@ -281,16 +261,11 @@ const CandidateDashboard = () => {
                         });
                       
                       if (uploadError) {
-                        console.error('Upload error:', uploadError);
                         throw uploadError;
                       }
                       
-                      console.log('CV uploaded successfully:', data);
                       cvUrl = fileName;
                     }
-                    
-                    console.log('Updating profile in database...');
-                    console.log('Profile data:', { full_name: formData.full_name, phone: formData.phone, linkedin_url: formData.linkedin_url, cv_url: cvUrl });
                     
                     const { error } = await supabase
                       .from('profiles')
@@ -304,10 +279,8 @@ const CandidateDashboard = () => {
                     
                     if (error) throw error;
                     
-                    console.log('Profile updated in database, refreshing...');
                     // Refresh profile data from AuthContext
                     await refreshProfile();
-                    console.log('Profile refreshed successfully');
                     
                     toast({
                       title: 'Profil actualizat!',
@@ -387,9 +360,7 @@ const CandidateDashboard = () => {
                           <CVUpload
                             uploadPath={profile.id}
                             onFileSelect={(file) => setCvFile(file)}
-                            onUploadComplete={(cvUrl) => {
-                              console.log('CV uploaded:', cvUrl);
-                            }}
+                            onUploadComplete={() => {}}
                           />
                         </div>
                       ) : profile.cv_url ? (

@@ -44,16 +44,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching profile:', error);
         return;
       }
       
       if (data) {
-        console.log('Profile updated:', data);
         setProfile(data);
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      // Silent fail - profile will remain null
     }
   };
 
@@ -64,17 +62,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    let mounted = true;
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
+        if (!mounted) return;
+        
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        // Defer profile fetching with setTimeout to avoid deadlock
         if (currentSession?.user) {
-          setTimeout(() => {
-            fetchProfile(currentSession.user.id);
-          }, 0);
+          await fetchProfile(currentSession.user.id);
         } else {
           setProfile(null);
         }
@@ -83,21 +82,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+    // Check for existing session
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+      if (!mounted) return;
+      
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
-        setTimeout(() => {
-          fetchProfile(currentSession.user.id);
-        }, 0);
+        await fetchProfile(currentSession.user.id);
       }
       
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (

@@ -120,7 +120,6 @@ const EmployerDashboard = () => {
   const { data: applications, isLoading: applicationsLoading } = useQuery({
     queryKey: ['employer-applications', profile?.id],
     queryFn: async () => {
-      console.log('Fetching applications for employer:', profile?.id);
       const { data, error } = await supabase
         .from('applications')
         .select(`
@@ -141,12 +140,9 @@ const EmployerDashboard = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching applications:', error);
         throw error;
       }
       
-      console.log('Applications fetched:', data);
-      console.log('Number of applications:', data?.length || 0);
       return data as Application[];
     },
     enabled: !!profile?.id,
@@ -189,12 +185,6 @@ const EmployerDashboard = () => {
     totalApplications: applications?.length || 0,
     interviewCandidates: applications?.filter(app => app.status === 'interview').length || 0,
   };
-
-  // Debug logging for stats
-  useEffect(() => {
-    console.log('Employer Dashboard Stats:', stats);
-    console.log('Applications:', applications);
-  }, [applications, stats]);
 
   const handleStatusChange = (applicationId: string, newStatus: Database['public']['Enums']['application_status']) => {
     updateStatusMutation.mutate({ applicationId, newStatus });
@@ -268,11 +258,6 @@ const EmployerDashboard = () => {
   };
 
   const getCandidateName = (app: Application) => {
-    console.log('Getting candidate name for application:', app.id, {
-      profiles_full_name: app.profiles?.full_name,
-      guest_name: (app as any).guest_name,
-      candidate_id: app.candidate_id
-    });
     if (app.profiles?.full_name) {
       return app.profiles.full_name;
     }
@@ -488,7 +473,16 @@ const EmployerDashboard = () => {
                                 disabled={updateJobStatusMutation.isPending}
                               >
                                 <SelectTrigger className="w-32">
-                                  <SelectValue />
+                                  <SelectValue>
+                                    {updateJobStatusMutation.isPending ? (
+                                      <span className="flex items-center gap-2">
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                        Se actualizează...
+                                      </span>
+                                    ) : (
+                                      <SelectValue />
+                                    )}
+                                  </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="active">

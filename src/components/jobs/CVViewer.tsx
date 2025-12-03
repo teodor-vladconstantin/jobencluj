@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
@@ -30,6 +30,9 @@ export const CVViewer = ({ cvPath, isOpen, onClose, candidateName }: CVViewerPro
   const { toast } = useToast();
 
   useEffect(() => {
+    let blobUrl: string | null = null;
+    let isMounted = true;
+
     const loadCV = async () => {
       if (!isOpen || !cvPath) return;
 
@@ -46,29 +49,34 @@ export const CVViewer = ({ cvPath, isOpen, onClose, candidateName }: CVViewerPro
 
         if (error) throw error;
 
+        if (!isMounted) return;
+
         setCvBlob(data);
         // Create a local blob URL for viewing (not shareable outside)
-        const url = URL.createObjectURL(data);
-        setCvUrl(url);
+        blobUrl = URL.createObjectURL(data);
+        setCvUrl(blobUrl);
       } catch (error: any) {
-        console.error('Error loading CV:', error);
+        if (!isMounted) return;
+        
         toast({
           title: 'Eroare',
           description: 'Nu am putut încărca CV-ul',
           variant: 'destructive',
         });
-        // Don't close the dialog, show error message instead
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     loadCV();
 
-    // Cleanup blob URL when component unmounts
+    // Cleanup blob URL when component unmounts or dependencies change
     return () => {
-      if (cvUrl) {
-        URL.revokeObjectURL(cvUrl);
+      isMounted = false;
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
       }
     };
   }, [isOpen, cvPath]);
@@ -121,6 +129,9 @@ export const CVViewer = ({ cvPath, isOpen, onClose, candidateName }: CVViewerPro
             <DialogTitle>
               {candidateName ? `CV - ${candidateName}` : 'Vizualizare CV'}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Vizualizează sau descarcă CV-ul candidatului. Folosește controalele de zoom și navigare pentru PDF-uri.
+            </DialogDescription>
             <div className="flex items-center gap-2">
               {numPages > 0 && fileType === 'pdf' && (
                 <>

@@ -56,13 +56,6 @@ export const AuthenticatedApplicationModal = ({ job, isOpen, onClose, onSuccess 
     setIsSubmitting(true);
 
     try {
-      console.log('Submitting authenticated application:', {
-        job_id: job.id,
-        candidate_id: profile.id,
-        cv_url: profile.cv_url,
-        cover_letter: coverLetter || null,
-      });
-
       const { error } = await supabase
         .from('applications')
         .insert({
@@ -74,7 +67,6 @@ export const AuthenticatedApplicationModal = ({ job, isOpen, onClose, onSuccess 
         });
 
       if (error) {
-        console.error('Application insert error:', error);
         // Check for duplicate application
         if (error.code === '23505') {
           toast({
@@ -86,8 +78,6 @@ export const AuthenticatedApplicationModal = ({ job, isOpen, onClose, onSuccess 
         }
         throw error;
       }
-
-      console.log('Application submitted successfully!');
 
       toast({
         title: 'Aplicație trimisă cu succes!',
@@ -101,7 +91,6 @@ export const AuthenticatedApplicationModal = ({ job, isOpen, onClose, onSuccess 
       setCoverLetter('');
       onSuccess();
     } catch (error) {
-      console.error('Application error:', error);
       toast({
         title: 'Eroare',
         description: error instanceof Error ? error.message : 'Eroare la trimiterea aplicației',

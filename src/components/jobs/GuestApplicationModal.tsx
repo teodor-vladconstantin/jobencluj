@@ -153,14 +153,11 @@ export const GuestApplicationModal = ({ job, isOpen, onClose, onSuccess }: Guest
         status: 'submitted' as const,
       };
       
-      console.log('Submitting guest application with data:', applicationData);
-      
       const { error: applicationError } = await supabase
         .from('applications')
         .insert(applicationData);
 
       if (applicationError) {
-        console.error('Application insert error:', applicationError);
         // Check for duplicate application
         if (applicationError.code === '23505') {
           toast({
@@ -192,7 +189,6 @@ export const GuestApplicationModal = ({ job, isOpen, onClose, onSuccess }: Guest
 
       onSuccess();
     } catch (error) {
-      console.error('Application error:', error);
       toast({
         title: 'Eroare',
         description: error instanceof Error ? error.message : 'Eroare la trimiterea aplicației',
