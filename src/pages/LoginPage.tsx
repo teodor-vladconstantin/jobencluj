@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { loginSchema, LoginFormData } from '@/lib/validators';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +13,8 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { signIn, user, profile } = useAuth();
   const { toast } = useToast();
+  const isMountedRef = useRef(true);
+  const redirectTimeoutRef = useRef<NodeJS.Timeout>();
   
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
@@ -21,15 +23,42 @@ const LoginPage = () => {
   const [errors, setErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({});
   const [loading, setLoading] = useState(false);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Redirect authenticated users
   useEffect(() => {
     if (user && profile) {
+      console.log('🔐 Login: User and profile loaded, redirecting...', { role: profile.role });
       const redirectPath = profile.role === 'candidate' 
         ? '/dashboard/candidate' 
         : '/dashboard/employer';
       navigate(redirectPath, { replace: true });
+    } else if (user && !profile) {
+      // User logged in but profile not loaded yet - set timeout safety
+      console.log('⏳ Login: User loaded, waiting for profile...');
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+      redirectTimeoutRef.current = setTimeout(() => {
+        console.warn('⚠️ Login: Profile fetch timeout, forcing redirect to jobs page');
+        if (isMountedRef.current) {
+          toast({
+            title: 'Avertisment',
+            description: 'Profilul se încarcă mai lent decât de obicei.',
+          });
+          navigate('/jobs', { replace: true });
+        }
+      }, 5000); // 5 second safety timeout
     }
-  }, [user, profile, navigate]);
+  }, [user, profile, navigate, toast]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -58,9 +87,11 @@ const LoginPage = () => {
     setLoading(true);
     setErrors({});
 
+    console.log('🔑 Attempting login...');
     const { error } = await signIn(formData.email, formData.password);
 
     if (error) {
+      console.error('❌ Login error:', error);
       if (error.message.includes('Invalid login credentials')) {
         toast({
           variant: 'destructive',
@@ -74,12 +105,16 @@ const LoginPage = () => {
           description: error.message || 'A apărut o eroare. Te rugăm să încerci din nou.',
         });
       }
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     } else {
+      console.log('✅ Login successful, waiting for profile...');
       toast({
         title: 'Autentificare reușită!',
         description: 'Bine ai revenit!',
       });
+      // Keep loading true while waiting for redirect
       // Navigation handled by useEffect
     }
   };

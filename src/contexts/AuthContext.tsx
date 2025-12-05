@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('🔍 Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -44,13 +45,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .maybeSingle();
 
       if (error) {
+        console.error('❌ Profile fetch error:', error);
         return;
       }
       
       if (data) {
+        console.log('✅ Profile loaded:', { role: data.role, email: data.email });
         setProfile(data);
+      } else {
+        console.warn('⚠️ No profile found for user');
       }
     } catch (error) {
+      console.error('❌ Profile fetch exception:', error);
       // Silent fail - profile will remain null
     }
   };
@@ -67,6 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
+        console.log('🔄 Auth state changed:', event, currentSession?.user?.email || 'No user');
         if (!mounted) return;
         
         setSession(currentSession);
