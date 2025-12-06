@@ -33,32 +33,18 @@ const LoginPage = () => {
     };
   }, []);
 
-  // Redirect authenticated users
+  // Redirect authenticated users ONLY if they navigate to login while already logged in
   useEffect(() => {
-    if (user && profile) {
-      console.log('🔐 Login: User and profile loaded, redirecting...', { role: profile.role });
+    // Only redirect if BOTH user AND profile exist (fully authenticated)
+    // This prevents the annoying redirect during login process
+    if (user && profile && !loading) {
+      console.log('🔐 Login: Already authenticated, redirecting...', { role: profile.role });
       const redirectPath = profile.role === 'candidate' 
         ? '/dashboard/candidate' 
         : '/dashboard/employer';
       navigate(redirectPath, { replace: true });
-    } else if (user && !profile) {
-      // User logged in but profile not loaded yet - set timeout safety
-      console.log('⏳ Login: User loaded, waiting for profile...');
-      if (redirectTimeoutRef.current) {
-        clearTimeout(redirectTimeoutRef.current);
-      }
-      redirectTimeoutRef.current = setTimeout(() => {
-        console.warn('⚠️ Login: Profile fetch timeout, forcing redirect to jobs page');
-        if (isMountedRef.current) {
-          toast({
-            title: 'Avertisment',
-            description: 'Profilul se încarcă mai lent decât de obicei.',
-          });
-          navigate('/jobs', { replace: true });
-        }
-      }, 5000); // 5 second safety timeout
     }
-  }, [user, profile, navigate, toast]);
+  }, [user, profile, loading, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

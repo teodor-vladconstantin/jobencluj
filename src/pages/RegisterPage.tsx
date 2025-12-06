@@ -27,15 +27,15 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState<Partial<Record<keyof RegisterFormData, string>>>({});
   const [loading, setLoading] = useState(false);
 
-  // Redirect authenticated users
+  // Redirect authenticated users ONLY if already logged in (not during registration)
   useEffect(() => {
-    if (user && profile) {
+    if (user && profile && !loading) {
       const redirectPath = profile.role === 'candidate' 
         ? '/dashboard/candidate' 
         : '/employer/onboarding';
       navigate(redirectPath, { replace: true });
     }
-  }, [user, profile, navigate]);
+  }, [user, profile, loading, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
