@@ -33,25 +33,19 @@ const LoginPage = () => {
     };
   }, []);
 
-  // Redirect authenticated users ONLY if they navigate to login while already logged in
+  // Redirect authenticated users after profile loads
   useEffect(() => {
-    // Only redirect if BOTH user AND profile exist (fully authenticated)
-    // This prevents the annoying redirect during login process
-    if (user && profile && !loading) {
-      console.log('🔐 Login: Already authenticated, redirecting...', { role: profile.role });
+    if (user && profile) {
+      console.log('🔐 Login: User authenticated with profile, redirecting...', { role: profile.role });
       const redirectPath = profile.role === 'candidate' 
         ? '/dashboard/candidate' 
         : '/dashboard/employer';
-      navigate(redirectPath, { replace: true });
-    } else if (user && profile && loading) {
-      // Login just completed and profile is loaded - do redirect
-      console.log('🔐 Login: Auth complete, redirecting...', { role: profile.role });
-      const redirectPath = profile.role === 'candidate' 
-        ? '/dashboard/candidate' 
-        : '/dashboard/employer';
+      
+      // Reset loading state before redirect
+      setLoading(false);
       navigate(redirectPath, { replace: true });
     }
-  }, [user, profile, loading, navigate]);
+  }, [user, profile, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
