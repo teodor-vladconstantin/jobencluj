@@ -14,7 +14,7 @@ import { CVUpload } from '@/components/jobs/CVUpload';
 import { CVViewer } from '@/components/jobs/CVViewer';
 import { Briefcase, FileText, User, ExternalLink, Loader2, Upload, Save } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/helpers';
-import { APPLICATION_STATUS_COLORS, APPLICATION_STATUS_LABELS } from '@/lib/constants';
+import { APPLICATION_STATUS_COLORS, APPLICATION_STATUS_LABELS, QUERY_STALE_TIME } from '@/lib/constants';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
@@ -25,7 +25,7 @@ type Application = Database['public']['Tables']['applications']['Row'] & {
 };
 
 const CandidateDashboard = () => {
-  const { profile, refreshProfile } = useAuth();
+  const { profile, refreshProfile, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
@@ -37,6 +37,19 @@ const CandidateDashboard = () => {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showCVViewer, setShowCVViewer] = useState(false);
+
+  // Show loading while auth context is loading
+  if (authLoading) {
+    return (
+      <PageLayout>
+        <div className="container mx-auto px-4 py-12">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
 
   const { data: applications, isLoading: applicationsLoading } = useQuery({
     queryKey: ['candidate-applications', profile?.id],
@@ -65,7 +78,7 @@ const CandidateDashboard = () => {
       return data as Application[];
     },
     enabled: !!profile?.id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: QUERY_STALE_TIME,
   });
 
   const stats = {
