@@ -53,7 +53,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('✅ Profile loaded:', { role: data.role, email: data.email });
         setProfile(data);
       } else {
-        console.warn('⚠️ No profile found for user');
+        console.warn('⚠️ No profile found for user - attempting to create one');
+        // Try to get user metadata to create profile
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (currentUser) {
+          const role = currentUser.user_metadata?.role || 'candidate';
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              email: currentUser.email!,
+              full_name: currentUser.user_metadata?.full_name || null,
+              role: role,
+              company_name: currentUser.user_metadata?.company_name || null,
+            });
+          
+          if (insertError) {
+            console.error('❌ Failed to create profile:', insertError);
+          } else {
+            console.log('✅ Profile created successfully, fetching...');
+            // Fetch the newly created profile
+            await fetchProfile(userId);
+          }
+        }
       }
     } catch (error) {
       console.error('❌ Profile fetch exception:', error);
@@ -75,33 +97,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       async (event, currentSession) => {
         console.log('🔄 Auth state changed:', event, currentSession?.user?.email || 'No user');
         if (!mounted) return;
-        
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (currentSession?.user) {
-          await fetchProfile(currentSession.user.id);
-        } else {
-          setProfile(null);
+        try {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          
+          if (currentSession?.user) {
+            await fetchProfile(currentSession.user.id);
+          } else {
+            setProfile(null);
+          }
+        } finally {
+          // Always clear loading even if fetchProfile fails
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
-      if (!mounted) return;
-      
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
-        await fetchProfile(currentSession.user.id);
-      }
-      
-      setLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(async ({ data: { session: currentSession } }) => {
+        if (!mounted) return;
+        try {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          
+          if (currentSession?.user) {
+            await fetchProfile(currentSession.user.id);
+          } else {
+            setProfile(null);
+          }
+        } finally {
+          setLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error('❌ getSession failed:', error);
+        if (mounted) setLoading(false);
+      });
 
     return () => {
       mounted = false;
