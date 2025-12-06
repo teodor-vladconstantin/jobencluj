@@ -28,7 +28,7 @@ type Application = Database['public']['Tables']['applications']['Row'] & {
 const QUERY_STALE_TIME = 5 * 60 * 1000;
 
 const CandidateDashboard = () => {
-  const { profile, refreshProfile, loading: authLoading } = useAuth();
+  const { profile, refreshProfile, loading: authLoading, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
@@ -82,11 +82,28 @@ const CandidateDashboard = () => {
     profile?.cv_url
   );
 
-  if (!profile) {
+  if (authLoading) {
     return (
       <PageLayout>
         <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </PageLayout>
+    );
+  }
+
+  // If the session is missing after a refresh, prompt a quick re-login instead of a blank spinner
+  if (!user || !profile) {
+    return (
+      <PageLayout>
+        <div className="flex flex-col items-center justify-center min-h-screen gap-4 text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground max-w-md">
+            Sesiunea nu a putut fi reluată automat. Te rugăm să te reconectezi pentru a continua.
+          </p>
+          <Button asChild>
+            <Link to="/login">Reautentifică-te</Link>
+          </Button>
         </div>
       </PageLayout>
     );
