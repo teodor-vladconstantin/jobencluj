@@ -14,7 +14,7 @@ import { CVUpload } from '@/components/jobs/CVUpload';
 import { CVViewer } from '@/components/jobs/CVViewer';
 import { Briefcase, FileText, User, ExternalLink, Loader2, Upload, Save } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/helpers';
-import { APPLICATION_STATUS_COLORS, APPLICATION_STATUS_LABELS, QUERY_STALE_TIME } from '@/lib/constants';
+import { APPLICATION_STATUS_COLORS, APPLICATION_STATUS_LABELS } from '@/lib/constants';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
@@ -23,6 +23,9 @@ import type { Database } from '@/integrations/supabase/types';
 type Application = Database['public']['Tables']['applications']['Row'] & {
   jobs: Database['public']['Tables']['jobs']['Row'];
 };
+
+// Local query stale time (5 minutes) to avoid build issues with missing export
+const QUERY_STALE_TIME = 5 * 60 * 1000;
 
 const CandidateDashboard = () => {
   const { profile, refreshProfile, loading: authLoading } = useAuth();
