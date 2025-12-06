@@ -43,6 +43,13 @@ const LoginPage = () => {
         ? '/dashboard/candidate' 
         : '/dashboard/employer';
       navigate(redirectPath, { replace: true });
+    } else if (user && profile && loading) {
+      // Login just completed and profile is loaded - do redirect
+      console.log('🔐 Login: Auth complete, redirecting...', { role: profile.role });
+      const redirectPath = profile.role === 'candidate' 
+        ? '/dashboard/candidate' 
+        : '/dashboard/employer';
+      navigate(redirectPath, { replace: true });
     }
   }, [user, profile, loading, navigate]);
 
@@ -95,13 +102,12 @@ const LoginPage = () => {
         setLoading(false);
       }
     } else {
-      console.log('✅ Login successful, waiting for profile...');
+      console.log('✅ Login successful, profile will load via useEffect');
       toast({
         title: 'Autentificare reușită!',
         description: 'Bine ai revenit!',
       });
-      // Keep loading true while waiting for redirect
-      // Navigation handled by useEffect
+      // Loading state and redirect handled by useEffect when profile loads
     }
   };
 
