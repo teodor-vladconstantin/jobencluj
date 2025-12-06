@@ -38,19 +38,6 @@ const CandidateDashboard = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [showCVViewer, setShowCVViewer] = useState(false);
 
-  // Show loading while auth context is loading
-  if (authLoading) {
-    return (
-      <PageLayout>
-        <div className="container mx-auto px-4 py-12">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        </div>
-      </PageLayout>
-    );
-  }
-
   const { data: applications, isLoading: applicationsLoading } = useQuery({
     queryKey: ['candidate-applications', profile?.id],
     queryFn: async () => {
