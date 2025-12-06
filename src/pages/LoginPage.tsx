@@ -6,12 +6,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { loginSchema, LoginFormData } from '@/lib/validators';
 import { useToast } from '@/hooks/use-toast';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { signIn, user, profile } = useAuth();
+  const { signIn, user, profile, refreshProfile } = useAuth();
   const { toast } = useToast();
   const isMountedRef = useRef(true);
   const redirectTimeoutRef = useRef<NodeJS.Timeout>();
@@ -96,12 +97,25 @@ const LoginPage = () => {
         setLoading(false);
       }
     } else {
-      console.log('✅ Login successful, profile will load via useEffect');
+      console.log('✅ Login successful, fetching user metadata for redirect...');
+      const { data: userData } = await supabase.auth.getUser();
+      const role = userData.user?.user_metadata?.role || 'candidate';
+
       toast({
         title: 'Autentificare reușită!',
         description: 'Bine ai revenit!',
       });
-      // Loading state and redirect handled by useEffect when profile loads
+
+      // Trigger profile refresh in background
+      refreshProfile();
+
+      // Immediate redirect based on role, without waiting for profile load
+      const redirectPath = role === 'candidate'
+        ? '/dashboard/candidate'
+        : '/dashboard/employer';
+
+      navigate(redirectPath, { replace: true });
+      setLoading(false);
     }
   };
 
